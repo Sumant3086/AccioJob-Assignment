@@ -21,7 +21,7 @@ export default function Chat({ currentSession, onSessionUpdate }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('/api/ai/generate', {
+      await axios.post('/api/ai/generate', {
         prompt: message,
         sessionId: currentSession._id
       }, {
@@ -72,7 +72,7 @@ export default function Chat({ currentSession, onSessionUpdate }) {
             <p className="text-sm">
               Ask me to create a React component. For example:
               <br />
-              "Create a blue button with rounded corners"
+              &ldquo;Create a blue button with rounded corners&rdquo;
             </p>
           </div>
         ) : (
