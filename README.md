@@ -82,6 +82,14 @@ npm run dev
 
 ## 🌐 Live Demo
 
+**🚀 Live Application**: [https://accio-job-assignment-six.vercel.app/](https://accio-job-assignment-six.vercel.app/)
+
+**📡 Backend API**: [https://acciojob-assignment-30a6.onrender.com/](https://acciojob-assignment-30a6.onrender.com/)
+
+**📁 GitHub Repository**: [https://github.com/Sumant3086/AccioJob-Assignment-.git](https://github.com/Sumant3086/AccioJob-Assignment-.git)
+
+### Quick Deployment Links
+
 **Frontend**: [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https://github.com/Sumant3086/AccioJob-Assignment.git&root-directory=frontend)
 
 **Backend**: [Deploy to Render](https://render.com/deploy/srv-clone?repo=https://github.com/Sumant3086/AccioJob-Assignment.git&root-directory=backend)

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: accio-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: accio-components
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:alpine
+    container_name: accio-redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    container_name: accio-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/accio-components
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - PORT=5000
+      - NODE_ENV=development
+      - FRONTEND_URL=http://localhost:3000
+      - CORS_ORIGIN=http://localhost:3000
+    depends_on:
+      - mongodb
+      - redis
+
+  frontend:
+    build: ./frontend
+    container_name: accio-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+volumes:
+  mongodb_data: 
