@@ -2,269 +2,274 @@
 
 A stateful, AI-driven micro-frontend playground where authenticated users can iteratively generate, preview, tweak, and export React components with all chat history and code edits preserved across logins.
 
-## 🌟 Features
+## ✨ Features
 
-### ✅ Core Features (Implemented)
-- **Authentication**: JWT-based user authentication with MongoDB
-- **Session Management**: Create, load, and manage component generation sessions
-- **AI Integration**: OpenRouter API integration for component generation
-- **Live Preview**: Real-time component rendering in iframe sandbox
-- **Code Export**: Download components as ZIP files with JSX/TSX and CSS
-- **Chat Interface**: Conversational UI for component generation
-- **State Persistence**: Auto-save functionality with Redis caching
-- **Iterative Refinement**: Modify existing components through chat
+### 🎯 Core Features
+- **🔐 Authentication**: Secure signup/login with JWT
+- **💬 Interactive Chat**: AI-powered component generation
+- **👁️ Live Preview**: Real-time component rendering
+- **📝 Code Editor**: Syntax-highlighted JSX/CSS tabs
+- **💾 Session Management**: Save and load previous work
+- **📦 Export**: Download components as ZIP files
 
-### 🎯 Technical Stack
-- **Backend**: Node.js + Express + MongoDB + Redis
-- **Frontend**: React + Next.js + Tailwind CSS
-- **AI**: OpenRouter API (Llama 3.1, GPT-4, etc.)
-- **Caching**: Redis for session state and performance
-- **Authentication**: JWT tokens with bcrypt password hashing
+### 🎨 Component Types
+- **🚗 Cars**: Visual car components with customization
+- **🔘 Buttons**: Interactive buttons with variants
+- **🃏 Cards**: Content cards with images
+- **🧭 Navigation**: Responsive navigation bars
+
+### 🔄 Iterative Refinement
+- **Live Controls**: Modify component properties in real-time
+- **Chat Refinement**: "Make it larger", "Change to red", etc.
+- **State Persistence**: All changes saved automatically
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Node.js** with Express.js
+- **MongoDB** with Mongoose
+- **JWT** for authentication
+- **bcryptjs** for password hashing
+- **OpenAI/OpenRouter** for AI integration
+
+### Frontend
+- **React** with Next.js
+- **Tailwind CSS** for styling
+- **Axios** for API calls
+- **JSZip** for file downloads
+
+### AI Integration
+- **Real AI**: OpenAI GPT-4o-mini / OpenRouter
+- **Mock AI**: Fallback for development
+- **Context Awareness**: Understands existing components
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB
-- Redis (optional, for caching)
+- Node.js (v16 or higher)
+- MongoDB (local or Atlas)
+- npm or yarn
 
-### Installation
-
-1. **Clone the repository**
+### 1. Clone and Setup
 ```bash
 git clone <your-repo-url>
 cd Accio
 ```
 
-2. **Install dependencies**
+### 2. Run the Setup Script
 ```bash
-# Backend
-cd backend
-npm install
+# Windows
+start.bat
 
-# Frontend
-cd ../frontend
-npm install
+# Or manually:
+# 1. Copy environment files
+cp backend/env.example backend/.env
+cp frontend/env.example frontend/.env.local
+
+# 2. Install dependencies
+cd backend && npm install
+cd ../frontend && npm install
+
+# 3. Start servers
+cd ../backend && npm start
+cd ../frontend && npm run dev
 ```
 
-3. **Environment Setup**
+### 3. Configure Environment
+Update the environment files with your settings:
 
-Create `.env` file in `backend/` directory:
+**Backend (.env):**
 ```env
-MONGODB_URI=mongodb://localhost:27017/ai-component-generator
+MONGODB_URI=mongodb://localhost:27017/accio-components
 JWT_SECRET=your-super-secret-jwt-key
-PORT=5000
-OPENROUTER_API_KEY=your-openrouter-api-key
-REDIS_URL=redis://localhost:6379
+OPENAI_API_KEY=your-openai-api-key  # Optional
+OPENROUTER_API_KEY=your-openrouter-api-key  # Optional
 ```
 
-4. **Start the application**
-```bash
-# Terminal 1 - Backend
-cd backend
-npm run dev
-
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
+**Frontend (.env.local):**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-5. **Access the application**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+### 4. Access the Application
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5000
 
-## 🏗️ Architecture
+## 🎯 Usage Guide
 
-### Backend Architecture
+### Creating Components
+1. **Sign up/Login** to your account
+2. **Create a new session** or load existing one
+3. **Type prompts** like:
+   - "Create a red sports car"
+   - "Make a blue button with rounded corners"
+   - "Generate a navigation bar"
+
+### Iterative Refinement
+1. **Use live controls** to modify properties
+2. **Chat refinement**:
+   - "Make it larger"
+   - "Change the color to blue"
+   - "Add rounded corners"
+
+### Exporting Components
+1. **Copy code** using the copy button
+2. **Download ZIP** for complete project files
+3. **Use in your projects** immediately
+
+## 🔒 Security Features
+
+### Authentication
+- JWT-based authentication
+- Password hashing with bcrypt
+- Email validation
+- Session management
+
+### Data Protection
+- Environment variables for secrets
+- CORS configuration
+- Input validation
+- Error handling without sensitive data
+
+### API Security
+- Rate limiting
+- Token verification
+- Secure headers
+- HTTPS enforcement in production
+
+## 📁 Project Structure
+
 ```
-backend/
-├── config/
-│   └── redis.js          # Redis configuration
-├── middleware/
-│   └── auth.js           # JWT authentication
-├── models/
-│   ├── User.js           # User model
-│   └── Session.js        # Session model
-├── routes/
-│   ├── auth.js           # Authentication routes
-│   ├── sessions.js       # Session management
-│   └── ai.js             # AI component generation
-└── server.js             # Express server
+Accio/
+├── backend/
+│   ├── config/          # Database and Redis config
+│   ├── middleware/      # Authentication middleware
+│   ├── models/          # MongoDB models
+│   ├── routes/          # API routes
+│   └── server.js        # Main server file
+├── frontend/
+│   ├── components/      # React components
+│   ├── pages/          # Next.js pages
+│   ├── styles/         # Global styles
+│   └── public/         # Static assets
+├── SECURITY.md         # Security checklist
+├── DEPLOYMENT.md       # Deployment guide
+└── start.bat          # Setup script
 ```
-
-### Frontend Architecture
-```
-frontend/
-├── components/
-│   ├── Chat.js           # Chat interface
-│   ├── CodeViewer.js     # Code display and export
-│   ├── ComponentPreview.js # Live component preview
-│   └── SessionList.js    # Session management
-├── pages/
-│   ├── _app.js           # App wrapper
-│   ├── index.js          # Landing page
-│   ├── login.js          # Login page
-│   ├── register.js       # Registration page
-│   └── dashboard.js      # Main dashboard
-└── styles/
-    └── globals.css       # Global styles
-```
-
-## 🔧 Key Features Implementation
-
-### 1. Authentication & Persistence
-- **JWT-based authentication** with secure password hashing
-- **Session persistence** with MongoDB
-- **Auto-save functionality** with Redis caching
-- **State restoration** on login/logout
-
-### 2. AI Integration
-- **OpenRouter API integration** for multiple LLM models
-- **Structured JSON responses** for consistent code generation
-- **Error handling** with fallback component generation
-- **Iterative refinement** support
-
-### 3. Micro-Frontend Rendering
-- **Secure iframe sandbox** for component isolation
-- **Live preview** with React 18 support
-- **Hot-reload** without full page refresh
-- **Cross-origin security** handling
-
-### 4. State Management
-- **Redis caching** for session data
-- **Auto-save triggers** on every interaction
-- **Graceful error recovery**
-- **Fast session loading**
 
 ## 🚀 Deployment
 
-### Heroku Deployment
-1. **Create Heroku app**
-```bash
-heroku create your-app-name
-```
+### Backend Deployment
+- **Render**: Easy deployment with environment variables
+- **Heroku**: Support for Node.js apps
+- **Railway**: Modern deployment platform
 
-2. **Add environment variables**
-```bash
-heroku config:set MONGODB_URI=your-mongodb-uri
-heroku config:set JWT_SECRET=your-jwt-secret
-heroku config:set OPENROUTER_API_KEY=your-api-key
-heroku config:set REDIS_URL=your-redis-url
-```
+### Frontend Deployment
+- **Vercel**: Optimized for Next.js
+- **Netlify**: Static site hosting
+- **GitHub Pages**: Free hosting option
 
-3. **Deploy backend**
-```bash
-cd backend
-git add .
-git commit -m "Deploy backend"
-git push heroku main
-```
+### Database
+- **MongoDB Atlas**: Cloud database service
+- **Local MongoDB**: For development
 
-4. **Deploy frontend to Vercel**
-```bash
-cd frontend
-vercel --prod
-```
+## 🔧 Configuration
 
 ### Environment Variables
-- `MONGODB_URI`: MongoDB connection string
+
+**Required:**
+- `MONGODB_URI`: Database connection string
 - `JWT_SECRET`: Secret key for JWT tokens
-- `OPENROUTER_API_KEY`: OpenRouter API key for AI generation
-- `REDIS_URL`: Redis connection string (optional)
-- `PORT`: Server port (default: 5000)
 
-## 📊 API Endpoints
+**Optional:**
+- `OPENAI_API_KEY`: For real AI integration
+- `OPENROUTER_API_KEY`: Alternative AI provider
+- `REDIS_URL`: For caching (optional)
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
+### AI Integration
+The platform works with or without AI API keys:
+- **With API keys**: Real AI responses
+- **Without API keys**: Mock AI fallback
 
-### Sessions
-- `GET /api/sessions` - Get user sessions
-- `POST /api/sessions` - Create new session
-- `GET /api/sessions/:id` - Get specific session
-- `PUT /api/sessions/:id` - Update session
+## 🐛 Troubleshooting
 
-### AI Generation
-- `POST /api/ai/generate` - Generate component
+### Common Issues
 
-## 🎯 Evaluation Checklist
+**1. Authentication Errors (401)**
+- Clear browser storage
+- Check JWT_SECRET in .env
+- Verify MongoDB connection
 
-### ✅ Implemented Features
-- [x] **Authentication & Backend** (10/10 points)
-  - Secure JWT sessions
-  - Password hashing with bcrypt
-  - RESTful API endpoints
-  - MongoDB schema design
+**2. Component Not Rendering**
+- Check browser console for errors
+- Verify backend is running
+- Check API endpoints
 
-- [x] **State Management & Statefulness** (15/15 points)
-  - Redis caching for session state
-  - Auto-save functionality
-  - State restoration on reload
+**3. AI Not Working**
+- Verify API keys in .env
+- Check API quota/limits
+- Mock AI will work as fallback
 
-- [x] **AI Integration** (20/20 points)
-  - OpenRouter API integration
-  - Structured JSON responses
-  - Error handling with fallbacks
-  - Loading states
+### Debug Mode
+Enable debug logging:
+```env
+NODE_ENV=development
+DEBUG=true
+```
 
-- [x] **Micro-Frontend Rendering** (10/10 points)
-  - Secure iframe sandbox
-  - Live component preview
-  - Cross-origin security
+## 📈 Performance
 
-- [x] **Code Editor & Export** (10/10 points)
-  - Syntax highlighting
-  - Copy functionality
-  - ZIP download with structure
+### Optimization
+- **Lazy loading** of components
+- **Caching** with Redis (optional)
+- **Compression** middleware
+- **CDN** for static assets
 
-- [x] **Iterative Workflow** (10/10 points)
-  - Chat-based component generation
-  - Component modification
-  - Turn-based conversation
-
-- [x] **Persistence & Resume** (10/10 points)
-  - Auto-save on every interaction
-  - Fast session loading
-  - Graceful error recovery
-
-- [x] **Polish & Accessibility** (10/10 points)
-  - Responsive design
-  - Loading states
-  - Error handling
-  - Clean UI/UX
-
-### 🎯 Total Score: 95/95 points
-
-## 🔮 Future Enhancements
-
-### Bonus Features (Optional)
-- [ ] **Interactive Property Editor**
-  - Element selection
-  - Real-time property modification
-  - Two-way binding
-
-- [ ] **Chat-Driven Overrides**
-  - Element-specific modifications
-  - Targeted AI updates
+### Monitoring
+- **Health checks** endpoint
+- **Error logging**
+- **Performance metrics**
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+1. **Fork** the repository
+2. **Create** a feature branch
+3. **Make** your changes
+4. **Test** thoroughly
+5. **Submit** a pull request
+
+### Development Setup
+```bash
+# Install dependencies
+npm install
+
+# Run in development mode
+npm run dev
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
+```
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🙏 Acknowledgments
 
-For support, please open an issue in the GitHub repository or contact the development team.
+- **OpenAI** for AI integration
+- **MongoDB** for database
+- **Vercel** for deployment
+- **Tailwind CSS** for styling
+
+## 📞 Support
+
+- **Issues**: Create a GitHub issue
+- **Documentation**: Check the docs folder
+- **Security**: Report to security@example.com
 
 ---
 
-**Live Demo**: [Your deployed URL here]
-**GitHub Repository**: [Your repo URL here] 
+**Made with ❤️ for the AI Component Generator Platform** 

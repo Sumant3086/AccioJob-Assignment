@@ -60,6 +60,18 @@ export default function Dashboard({ user, setUser }) {
     }
   };
 
+  const updateSession = (updatedSession) => {
+    // Update current session
+    setCurrentSession(updatedSession);
+    
+    // Update sessions array to keep it in sync
+    setSessions(prevSessions => 
+      prevSessions.map(session => 
+        session._id === updatedSession._id ? updatedSession : session
+      )
+    );
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -113,7 +125,7 @@ export default function Dashboard({ user, setUser }) {
         <div className="w-1/3 border-r border-gray-200">
           <Chat
             currentSession={currentSession}
-            onSessionUpdate={setCurrentSession}
+            onSessionUpdate={updateSession}
           />
         </div>
 

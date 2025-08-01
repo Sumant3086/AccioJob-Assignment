@@ -19,25 +19,49 @@ export default function Chat({ currentSession, onSessionUpdate }) {
     if (!message.trim() || !currentSession || loading) return;
 
     setLoading(true);
+    const currentMessage = message.trim();
+    setMessage(''); // Clear input immediately
+
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/ai/generate', {
-        prompt: message,
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.post('/api/ai/generate', {
+        prompt: currentMessage,
         sessionId: currentSession._id
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Reload the session to get updated data
-      const sessionResponse = await axios.get(`/api/sessions/${currentSession._id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      onSessionUpdate(sessionResponse.data);
-      setMessage('');
+      // Update the session with the response
+      if (response.data.session) {
+        onSessionUpdate(response.data.session);
+      }
+      
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('Failed to generate component. Please try again.');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to generate component. Please try again.';
+      
+      // Show error in chat instead of alert
+      const errorSession = {
+        ...currentSession,
+        messages: [
+          ...currentSession.messages,
+          {
+            role: 'user',
+            content: currentMessage,
+            timestamp: new Date()
+          },
+          {
+            role: 'assistant',
+            content: `Error: ${errorMessage}`,
+            timestamp: new Date()
+          }
+        ]
+      };
+      onSessionUpdate(errorSession);
     } finally {
       setLoading(false);
     }
@@ -72,7 +96,11 @@ export default function Chat({ currentSession, onSessionUpdate }) {
             <p className="text-sm">
               Ask me to create a React component. For example:
               <br />
-              &ldquo;Create a blue button with rounded corners&rdquo;
+              "Create a blue button with rounded corners"
+              <br />
+              "Make a card component with image and title"
+              <br />
+              "Build a responsive navigation bar"
             </p>
           </div>
         ) : (
