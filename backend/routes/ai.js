@@ -14,11 +14,24 @@ const generateWithRealAI = async (prompt, context = null) => {
       const messages = [
         {
           role: "system",
-          content: `You are a React component generator. Generate ONLY valid React JSX components with CSS styling. 
-          Return a JSON object with 'jsx' and 'css' properties. The JSX should be a complete React component.
-          Make components modern, responsive, and well-styled.
-          
-          ${context ? 'This is an iterative refinement. Modify the existing component based on the user request.' : ''}`
+          content: `You are an expert React component generator. Create modern, responsive React components based on user descriptions.
+
+IMPORTANT RULES:
+1. ALWAYS return a valid JSON object with 'jsx' and 'css' properties
+2. The JSX should be a complete, functional React component
+3. CSS should be comprehensive and modern
+4. Understand user intent - if they ask for a "red button", create a button with red styling
+5. If they ask for "navigation bar", create a proper navbar component
+6. If they ask for "card", create a card with image, title, and content
+7. Make components interactive and visually appealing
+
+Component Types to Generate:
+- Button: Interactive buttons with hover effects
+- Card: Content cards with images, titles, descriptions
+- Navbar: Navigation bars with links and mobile responsiveness
+- Car: Visual car components with wheels, body, and details
+
+${context ? 'This is an iterative refinement. Modify the existing component based on the user request while preserving its core structure.' : 'Create a new component based on the user description.'}`
         }
       ];
 
@@ -30,7 +43,15 @@ const generateWithRealAI = async (prompt, context = null) => {
       } else {
         messages.push({
           role: "user",
-          content: `Create a React component for: ${prompt}. Return only valid JSON with jsx and css properties.`
+          content: `Create a React component for: "${prompt}". 
+
+Examples of what to generate:
+- "red button" → Button with red background and white text
+- "navigation bar" → Responsive navbar with links
+- "card with image" → Card component with image, title, content
+- "car component" → Visual car with wheels and body
+
+Return only valid JSON with jsx and css properties.`
         });
       }
 
@@ -182,6 +203,130 @@ export default Button;`,
 
 .btn-success:hover {
   background-color: #059669;
+}`
+    },
+    form: {
+      jsx: `import React, { useState } from 'react';
+
+const LoginForm = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form submitted:', formData);
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  return (
+    <div className="form-container">
+      <form className="login-form" onSubmit={handleSubmit}>
+        <h2 className="form-title">Login</h2>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <button type="submit" className="submit-btn">
+          Sign In
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default LoginForm;`,
+      css: `.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.login-form {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #555;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
 }`
     },
     car: {
@@ -468,36 +613,57 @@ export default Navbar;`,
   
   // Check if this is a request for a completely new component type
   const isNewComponentRequest = (prompt) => {
-    const newComponentKeywords = ['create', 'make', 'build', 'generate', 'new'];
-    const componentTypes = ['car', 'vehicle', 'automobile', 'button', 'card', 'navbar', 'nav', 'header', 'menu'];
+    const newComponentKeywords = ['create', 'make', 'build', 'generate', 'new', 'show', 'display'];
+    const componentTypes = ['car', 'vehicle', 'automobile', 'button', 'card', 'navbar', 'nav', 'header', 'menu', 'form', 'input', 'login'];
     
-    const hasNewKeyword = newComponentKeywords.some(keyword => prompt.includes(keyword));
-    const hasComponentType = componentTypes.some(type => prompt.includes(type));
+    const hasNewKeyword = newComponentKeywords.some(keyword => prompt.toLowerCase().includes(keyword));
+    const hasComponentType = componentTypes.some(type => prompt.toLowerCase().includes(type));
     
-    return hasNewKeyword && hasComponentType;
+    // Also check for color/style requests that indicate new components
+    const styleKeywords = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'white', 'black'];
+    const hasStyleRequest = styleKeywords.some(color => prompt.toLowerCase().includes(color));
+    
+    return (hasNewKeyword && hasComponentType) || (hasStyleRequest && prompt.toLowerCase().includes('button'));
   };
   
   // If this is a new component request, ignore context and create fresh
   if (isNewComponentRequest(promptLower)) {
     console.log('New component request detected:', promptLower);
     
-    // Specific component matching
+    // Enhanced component matching with better prompt understanding
     if (promptLower.includes('car') || promptLower.includes('vehicle') || promptLower.includes('automobile')) {
       console.log('Generating car component');
       return components.car;
-    } else if (promptLower.includes('button') || promptLower.includes('btn')) {
+    } else if (promptLower.includes('button') || promptLower.includes('btn') || 
+               (promptLower.includes('red') && promptLower.includes('button')) ||
+               (promptLower.includes('blue') && promptLower.includes('button'))) {
       console.log('Generating button component');
       return components.button;
-    } else if (promptLower.includes('card') || promptLower.includes('container') || promptLower.includes('box')) {
+    } else if (promptLower.includes('card') || promptLower.includes('container') || 
+               promptLower.includes('box') || promptLower.includes('image')) {
       console.log('Generating card component');
       return components.card;
-    } else if (promptLower.includes('nav') || promptLower.includes('header') || promptLower.includes('menu') || promptLower.includes('navigation')) {
+    } else if (promptLower.includes('nav') || promptLower.includes('header') || 
+               promptLower.includes('menu') || promptLower.includes('navigation') ||
+               promptLower.includes('home') && promptLower.includes('about')) {
       console.log('Generating navbar component');
       return components.navbar;
+    } else if (promptLower.includes('form') || promptLower.includes('input') || 
+               promptLower.includes('login') || promptLower.includes('signup')) {
+      console.log('Generating form component');
+      return components.form;
     } else {
-      // Default to button for generic requests
-      console.log('Generating default button component');
-      return components.button;
+      // Smart default based on prompt content
+      if (promptLower.includes('red') || promptLower.includes('blue') || promptLower.includes('green')) {
+        console.log('Generating colored button component');
+        return components.button;
+      } else if (promptLower.includes('image') || promptLower.includes('photo')) {
+        console.log('Generating card component with image');
+        return components.card;
+      } else {
+        console.log('Generating default button component');
+        return components.button;
+      }
     }
   }
   
