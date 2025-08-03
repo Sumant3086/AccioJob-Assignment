@@ -19,9 +19,6 @@ export default function ComponentPreview({ jsx, css }) {
     console.log('ComponentPreview received:', {
       jsx: jsx.substring(0, 100) + '...',
       css: css.substring(0, 100) + '...',
-      isCar: jsx.includes('car') || jsx.includes('Car'),
-      isButton: jsx.includes('button') || jsx.includes('Button'),
-      isNavbar: jsx.includes('Navbar') || (jsx.includes('nav') && jsx.includes('navbar')),
       componentName: jsx.match(/const\s+(\w+)\s*=/)?.[1] || 'Unknown'
     });
 
@@ -39,13 +36,13 @@ export default function ComponentPreview({ jsx, css }) {
       // Clear previous content
       previewContainer.innerHTML = '';
 
-      // Create a more sophisticated preview with React-like behavior
-      const createAdvancedPreview = () => {
+      // Create a dynamic preview that can handle any component
+      const createDynamicPreview = () => {
         // Add CSS styles with scoping
         const styleElement = document.createElement('style');
         styleElement.textContent = `
           .component-preview-container {
-              padding: 20px;
+            padding: 20px;
             min-height: 200px;
             background: white;
             border-radius: 8px;
@@ -95,8 +92,8 @@ export default function ComponentPreview({ jsx, css }) {
           }
           .control-group button:hover {
             background: #0056b3;
-            }
-            ${css}
+          }
+          ${css}
         `;
         previewContainer.appendChild(styleElement);
 
@@ -110,51 +107,31 @@ export default function ComponentPreview({ jsx, css }) {
         wrapper.className = 'component-wrapper';
         container.appendChild(wrapper);
 
-        // Extract component type and create interactive preview
+        // Extract component name
         const componentName = jsx.match(/const\s+(\w+)\s*=/)?.[1] || 'Component';
         
-        // Improved component detection with priority
-        const isNavbar = jsx.includes('Navbar') || (jsx.includes('nav') && jsx.includes('navbar'));
-        const isCar = jsx.includes('Car') || (jsx.includes('car') && !jsx.includes('navbar'));
-        const isCard = jsx.includes('Card') || (jsx.includes('card') && !jsx.includes('navbar'));
-        const isButton = jsx.includes('Button') || (jsx.includes('button') && !jsx.includes('navbar') && !jsx.includes('nav'));
-        const isForm = jsx.includes('LoginForm') || jsx.includes('Form') || (jsx.includes('form') && !jsx.includes('button')) || jsx.includes('login-form');
+        console.log('Creating dynamic component:', componentName);
 
-        console.log('Component type detection:', {
-          componentName,
-          isButton,
-          isCar,
-          isCard,
-          isNavbar,
-          isForm,
-          jsxSnippet: jsx.substring(0, 200)
-        });
-
-        if (isNavbar) {
-          console.log('Creating Navbar component');
-          createInteractiveNavbar(wrapper, componentState, setComponentState);
-        } else if (isCar) {
-          console.log('Creating Car component');
-          createInteractiveCar(wrapper, componentState, setComponentState);
-        } else if (isCard) {
-          console.log('Creating Card component');
-          createInteractiveCard(wrapper, componentState, setComponentState);
-        } else if (isButton) {
-          console.log('Creating Button component');
-          createInteractiveButton(wrapper, componentState, setComponentState);
-        } else if (isForm) {
-          console.log('Creating Form component');
-          createInteractiveForm(wrapper, componentState, setComponentState);
-        } else {
-          console.log('Creating Generic component');
-          createGenericComponent(wrapper, componentName);
-        }
+        // Create a simple interactive version of the component
+        createInteractiveComponent(wrapper, componentName, componentState, setComponentState);
 
         // Add component controls
-        createComponentControls(container, componentState, setComponentState);
+        createComponentControls(container, componentState, setComponentState, componentName);
+
+        // Add event listener for state updates with error handling
+        const controls = container.querySelector('.component-controls');
+        if (controls) {
+          controls.addEventListener('updateState', (e) => {
+            try {
+              setComponentState(prev => ({ ...prev, ...e.detail }));
+            } catch (error) {
+              console.error('State update error:', error);
+            }
+          });
+        }
       };
 
-      createAdvancedPreview();
+      createDynamicPreview();
       setLoading(false);
 
     } catch (err) {
@@ -164,165 +141,155 @@ export default function ComponentPreview({ jsx, css }) {
     }
   }, [jsx, css, componentState]);
 
-  // Interactive Button Component
-  const createInteractiveButton = (wrapper, state, setState) => {
-    const button = document.createElement('button');
-    button.textContent = state.text || 'Click me!';
-    button.className = `btn btn-${state.variant || 'primary'}`;
-    button.style.fontSize = state.fontSize || '16px';
-    button.style.padding = state.padding || '12px 24px';
+  // Create interactive component based on the generated JSX
+  const createInteractiveComponent = (wrapper, componentName, state, setState) => {
+    // Create a simple interactive version based on component type
+    const componentDiv = document.createElement('div');
+    componentDiv.className = 'generated-component';
     
-    button.onclick = () => {
-      alert(state.onClickMessage || 'Button clicked!');
-    };
-
-    wrapper.appendChild(button);
-  };
-
-  // Interactive Car Component
-  const createInteractiveCar = (wrapper, state, setState) => {
-    const car = document.createElement('div');
-    car.className = 'car';
-    
-    car.innerHTML = `
-      <div class="car-body">
-        <div class="car-top"></div>
-        <div class="car-bottom">
-          <div class="car-wheel car-wheel-front"></div>
-          <div class="car-wheel car-wheel-back"></div>
-        </div>
-      </div>
-      <div class="car-details">
-        <h3 class="car-model">${state.model || 'Sports Car'}</h3>
-        <p class="car-specs">Color: ${state.color || 'red'} | Speed: ${state.speed || 'fast'}</p>
-      </div>
-    `;
-    
-    wrapper.appendChild(car);
-  };
-
-  // Interactive Card Component
-  const createInteractiveCard = (wrapper, state, setState) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.maxWidth = state.maxWidth || '300px';
-    
-    card.innerHTML = `
-      ${state.showImage ? `<div class="card-image">
-        <img src="${state.imageUrl || 'https://via.placeholder.com/300x200'}" alt="Card image" />
-      </div>` : ''}
-      <div class="card-content">
-        <h3 class="card-title">${state.title || 'Sample Card'}</h3>
-        <p class="card-text">${state.content || 'This is a sample card component with the generated styling.'}</p>
-      </div>
-    `;
-    
-    wrapper.appendChild(card);
-  };
-
-  // Interactive Navbar Component
-  const createInteractiveNavbar = (wrapper, state, setState) => {
-    const navbar = document.createElement('nav');
-    navbar.className = 'navbar';
-    
-    navbar.innerHTML = `
-      <div class="navbar-brand">
-        <span class="navbar-logo">${state.brand || 'Brand'}</span>
-      </div>
-      <div class="navbar-menu">
-        ${(state.links || ['Home', 'About', 'Contact']).map(link => 
-          `<a href="#" class="navbar-link">${link}</a>`
-        ).join('')}
-      </div>
-    `;
-    
-    wrapper.appendChild(navbar);
-  };
-
-  // Interactive Form Component
-  const createInteractiveForm = (wrapper, state, setState) => {
-    const form = document.createElement('div');
-    form.className = 'form-container';
-    
-    form.innerHTML = `
-      <form class="login-form">
-        <h2 class="form-title">${state.title || 'Login'}</h2>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value="${state.email || ''}"
-            placeholder="${state.emailPlaceholder || 'Enter your email'}"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value="${state.password || ''}"
-            placeholder="${state.passwordPlaceholder || 'Enter your password'}"
-            required
-          />
-        </div>
-        <button type="submit" class="submit-btn">
-          ${state.buttonText || 'Sign In'}
+    // Extract props from the JSX to create a simple interactive version
+    if (componentName.toLowerCase().includes('button')) {
+      componentDiv.innerHTML = `
+        <button class="btn btn-primary" style="padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          ${state.text || 'Click me!'}
         </button>
-      </form>
-    `;
+      `;
+      
+      const button = componentDiv.querySelector('button');
+      button.onclick = () => {
+        alert(state.onClickMessage || 'Button clicked!');
+      };
+    } else if (componentName.toLowerCase().includes('dropdown')) {
+      componentDiv.innerHTML = `
+        <div class="dropdown" style="position: relative; width: 300px;">
+          <button class="dropdown-button" style="width: 100%; padding: 12px 16px; background: white; border: 2px solid #e1e5e9; border-radius: 8px; cursor: pointer;">
+            ${state.selectedOption || state.placeholder || 'Select an option'} ▼
+          </button>
+        </div>
+      `;
+      
+      const button = componentDiv.querySelector('button');
+      button.onclick = () => {
+        const options = state.options || ['Option 1', 'Option 2', 'Option 3'];
+        const selected = prompt('Select an option:', options.join(', '));
+        if (selected && options.includes(selected)) {
+          setState(prev => ({ ...prev, selectedOption: selected }));
+        }
+      };
+    } else if (componentName.toLowerCase().includes('form')) {
+      componentDiv.innerHTML = `
+        <form style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <h3 style="margin-bottom: 15px;">${state.title || 'Form'}</h3>
+          <div style="margin-bottom: 10px;">
+            <label>Email:</label>
+            <input type="email" placeholder="${state.emailPlaceholder || 'Enter email'}" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label>Password:</label>
+            <input type="password" placeholder="${state.passwordPlaceholder || 'Enter password'}" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <button type="submit" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            ${state.buttonText || 'Submit'}
+          </button>
+        </form>
+      `;
+      
+      const form = componentDiv.querySelector('form');
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        alert('Form submitted!');
+      };
+    } else if (componentName.toLowerCase().includes('card')) {
+      componentDiv.innerHTML = `
+        <div class="card" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; max-width: 300px;">
+          <h3 style="margin-bottom: 10px;">${state.title || 'Card Title'}</h3>
+          <p style="color: #666;">${state.content || 'This is a sample card component.'}</p>
+        </div>
+      `;
+    } else if (componentName.toLowerCase().includes('navbar')) {
+      componentDiv.innerHTML = `
+        <nav style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: bold; color: #007bff;">${state.brand || 'Brand'}</span>
+          <div style="display: flex; gap: 20px;">
+            ${(state.links || ['Home', 'About', 'Contact']).map(link => 
+              `<a href="#" style="text-decoration: none; color: #333;">${link}</a>`
+            ).join('')}
+          </div>
+        </nav>
+      `;
+    } else {
+      // Generic component fallback
+      componentDiv.innerHTML = `
+        <div style="padding: 20px; border: 2px dashed #ccc; border-radius: 8px; text-align: center;">
+          <h3 style="margin: 0 0 10px 0; color: #666;">${componentName} Component</h3>
+          <p style="margin: 0; color: #999;">Interactive preview of the generated component</p>
+        </div>
+      `;
+    }
     
-    // Add form submission handler
-    const formElement = form.querySelector('form');
-    formElement.onsubmit = (e) => {
-      e.preventDefault();
-      alert(state.submitMessage || 'Form submitted! Check console for details.');
-      console.log('Form submitted with:', {
-        email: formElement.querySelector('#email').value,
-        password: formElement.querySelector('#password').value
-      });
-    };
-    
-    wrapper.appendChild(form);
+    wrapper.appendChild(componentDiv);
   };
 
-  // Generic Component
-  const createGenericComponent = (wrapper, componentName) => {
-    const genericComponent = document.createElement('div');
-    genericComponent.className = 'generated-component';
-    genericComponent.innerHTML = `
-      <div style="padding: 20px; border: 2px dashed #ccc; border-radius: 8px; text-align: center;">
-        <h3 style="margin: 0 0 10px 0; color: #666;">${componentName} Component</h3>
-        <p style="margin: 0; color: #999;">Component preview with generated CSS styling</p>
-      </div>
-    `;
-    wrapper.appendChild(genericComponent);
-  };
-
-  // Component Controls
-  const createComponentControls = (container, state, setState) => {
+  // Create generic component controls
+  const createComponentControls = (container, state, setState, componentName) => {
     const controls = document.createElement('div');
     controls.className = 'component-controls';
     
-    const componentName = jsx.match(/const\s+(\w+)\s*=/)?.[1] || 'Component';
-    
-    // Use the same improved component detection logic
-    const isNavbar = jsx.includes('Navbar') || (jsx.includes('nav') && jsx.includes('navbar'));
-    const isCar = jsx.includes('Car') || (jsx.includes('car') && !jsx.includes('navbar'));
-    const isCard = jsx.includes('Card') || (jsx.includes('card') && !jsx.includes('navbar'));
-    const isButton = jsx.includes('Button') || (jsx.includes('button') && !jsx.includes('navbar') && !jsx.includes('nav'));
-    const isForm = jsx.includes('Form') || jsx.includes('LoginForm') || jsx.includes('form') || jsx.includes('login-form');
-
     controls.innerHTML = `
       <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
         <strong>${componentName} Controls</strong> - Modify component properties
       </div>
     `;
 
-    if (isNavbar) {
+    // Add generic controls based on component type
+    if (componentName.toLowerCase().includes('button')) {
+      controls.innerHTML += `
+        <div class="control-group">
+          <label>Text:</label>
+          <input type="text" value="${state.text || 'Click me!'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {text: this.value}}))" />
+        </div>
+      `;
+    } else if (componentName.toLowerCase().includes('dropdown')) {
+      controls.innerHTML += `
+        <div class="control-group">
+          <label>Placeholder:</label>
+          <input type="text" value="${state.placeholder || 'Select an option'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {placeholder: this.value}}))" />
+        </div>
+        <div class="control-group">
+          <label>Options:</label>
+          <input type="text" value="${(state.options || ['Option 1', 'Option 2', 'Option 3']).join(', ')}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {options: this.value.split(',').map(o => o.trim())}}))" />
+        </div>
+      `;
+    } else if (componentName.toLowerCase().includes('form')) {
+      controls.innerHTML += `
+        <div class="control-group">
+          <label>Title:</label>
+          <input type="text" value="${state.title || 'Form'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {title: this.value}}))" />
+        </div>
+        <div class="control-group">
+          <label>Button Text:</label>
+          <input type="text" value="${state.buttonText || 'Submit'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {buttonText: this.value}}))" />
+        </div>
+      `;
+    } else if (componentName.toLowerCase().includes('card')) {
+      controls.innerHTML += `
+        <div class="control-group">
+          <label>Title:</label>
+          <input type="text" value="${state.title || 'Card Title'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {title: this.value}}))" />
+        </div>
+        <div class="control-group">
+          <label>Content:</label>
+          <input type="text" value="${state.content || 'This is a sample card component.'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {content: this.value}}))" />
+        </div>
+      `;
+    } else if (componentName.toLowerCase().includes('navbar')) {
       controls.innerHTML += `
         <div class="control-group">
           <label>Brand:</label>
@@ -335,103 +302,7 @@ export default function ComponentPreview({ jsx, css }) {
                  onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {links: this.value.split(',').map(l => l.trim())}}))" />
         </div>
       `;
-    } else if (isCar) {
-      controls.innerHTML += `
-        <div class="control-group">
-          <label>Model:</label>
-          <input type="text" value="${state.model || 'Sports Car'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {model: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Color:</label>
-          <select onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {color: this.value}}))">
-            <option value="red" ${(state.color || 'red') === 'red' ? 'selected' : ''}>Red</option>
-            <option value="blue" ${(state.color || 'red') === 'blue' ? 'selected' : ''}>Blue</option>
-            <option value="green" ${(state.color || 'red') === 'green' ? 'selected' : ''}>Green</option>
-            <option value="yellow" ${(state.color || 'red') === 'yellow' ? 'selected' : ''}>Yellow</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label>Speed:</label>
-          <select onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {speed: this.value}}))">
-            <option value="fast" ${(state.speed || 'fast') === 'fast' ? 'selected' : ''}>Fast</option>
-            <option value="medium" ${(state.speed || 'fast') === 'medium' ? 'selected' : ''}>Medium</option>
-            <option value="slow" ${(state.speed || 'fast') === 'slow' ? 'selected' : ''}>Slow</option>
-          </select>
-        </div>
-      `;
-    } else if (isCard) {
-      controls.innerHTML += `
-        <div class="control-group">
-          <label>Title:</label>
-          <input type="text" value="${state.title || 'Sample Card'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {title: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Content:</label>
-          <input type="text" value="${state.content || 'This is a sample card component with the generated styling.'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {content: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Show Image:</label>
-          <input type="checkbox" ${state.showImage ? 'checked' : ''} 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {showImage: this.checked}}))" />
-        </div>
-      `;
-    } else if (isButton) {
-      controls.innerHTML += `
-        <div class="control-group">
-          <label>Text:</label>
-          <input type="text" value="${state.text || 'Click me!'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {text: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Variant:</label>
-          <select onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {variant: this.value}}))">
-            <option value="primary" ${(state.variant || 'primary') === 'primary' ? 'selected' : ''}>Primary</option>
-            <option value="secondary" ${(state.variant || 'primary') === 'secondary' ? 'selected' : ''}>Secondary</option>
-            <option value="success" ${(state.variant || 'primary') === 'success' ? 'selected' : ''}>Success</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label>Size:</label>
-          <input type="text" value="${state.fontSize || '16px'}" placeholder="16px"
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {fontSize: this.value}}))" />
-        </div>
-      `;
-    } else if (isForm) {
-      controls.innerHTML += `
-        <div class="control-group">
-          <label>Title:</label>
-          <input type="text" value="${state.title || 'Login'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {title: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Button Text:</label>
-          <input type="text" value="${state.buttonText || 'Sign In'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {buttonText: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Email Placeholder:</label>
-          <input type="text" value="${state.emailPlaceholder || 'Enter your email'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {emailPlaceholder: this.value}}))" />
-        </div>
-        <div class="control-group">
-          <label>Password Placeholder:</label>
-          <input type="text" value="${state.passwordPlaceholder || 'Enter your password'}" 
-                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {passwordPlaceholder: this.value}}))" />
-        </div>
-      `;
     }
-
-    // Add event listener for state updates with error handling
-    controls.addEventListener('updateState', (e) => {
-      try {
-        setState(prev => ({ ...prev, ...e.detail }));
-      } catch (error) {
-        console.error('State update error:', error);
-      }
-    });
 
     container.appendChild(controls);
   };
@@ -470,26 +341,17 @@ export default function ComponentPreview({ jsx, css }) {
     <div className="h-full flex flex-col">
       <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">Live Component Preview</h3>
-        <div className="flex items-center space-x-2">
+        <div className="flex space-x-1">
           <div className="w-3 h-3 bg-red-400 rounded-full"></div>
           <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
           <div className="w-3 h-3 bg-green-400 rounded-full"></div>
         </div>
       </div>
       
-      <div className="flex-1 relative bg-white overflow-auto">
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
-            <div className="flex items-center space-x-2">
-              <div className="loading-spinner"></div>
-              <span className="text-sm text-gray-600">Loading preview...</span>
-            </div>
-          </div>
-        )}
-        
-        <div
-          ref={previewRef}
-          className="w-full h-full p-4"
+      <div className="flex-1 p-4">
+        <div 
+          ref={previewRef} 
+          className="h-full bg-white border border-gray-200 rounded-lg overflow-hidden"
         />
       </div>
     </div>
