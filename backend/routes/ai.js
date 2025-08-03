@@ -5,16 +5,32 @@ const router = express.Router();
 const Session = require("../models/Session");
 const auth = require("../middleware/auth");
 const axios = require("axios");
+const multer = require("multer");
+
+// Configure multer for image uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // Real AI Integration (OpenAI/OpenRouter)
-const generateWithRealAI = async (prompt, context = null) => {
+const generateWithRealAI = async (prompt, context = null, imageBuffer = null) => {
   try {
     // Try OpenAI first
     if (process.env.OPENAI_API_KEY) {
       const messages = [
         {
           role: "system",
-          content: `You are an expert React component generator. Create modern, responsive React components based on user descriptions.
+          content: `You are an expert React component generator with a conversational, helpful personality like ChatGPT. Create modern, responsive React components based on user descriptions.
 
 IMPORTANT RULES:
 1. ALWAYS return a valid JSON object with 'jsx' and 'css' properties
@@ -24,12 +40,14 @@ IMPORTANT RULES:
 5. If they ask for "navigation bar", create a proper navbar component
 6. If they ask for "card", create a card with image, title, and content
 7. Make components interactive and visually appealing
+8. Be conversational and helpful in your responses
 
 Component Types to Generate:
 - Button: Interactive buttons with hover effects
 - Card: Content cards with images, titles, descriptions
 - Navbar: Navigation bars with links and mobile responsiveness
 - Car: Visual car components with wheels, body, and details
+- Form: Login/signup forms with proper validation
 
 ${context ? 'This is an iterative refinement. Modify the existing component based on the user request while preserving its core structure.' : 'Create a new component based on the user description.'}`
         }
@@ -50,19 +68,38 @@ Examples of what to generate:
 - "navigation bar" → Responsive navbar with links
 - "card with image" → Card component with image, title, content
 - "car component" → Visual car with wheels and body
+- "login form" → Form with email/password fields
 
 Return only valid JSON with jsx and css properties.`
         });
       }
 
+      const requestBody = {
+        model: "gpt-4o-mini",
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 2000
+      };
+
+      // Add image if provided
+      if (imageBuffer) {
+        requestBody.messages[1].content = [
+          {
+            type: "text",
+            text: `Create a React component based on this image: ${prompt || 'Generate a component based on this image'}. Return only valid JSON with jsx and css properties.`
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}`
+            }
+          }
+        ];
+      }
+
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
-      {
-          model: "gpt-4o-mini",
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 2000
-        },
+      requestBody,
         {
           headers: {
             "Content-Type": "application/json",
@@ -87,9 +124,9 @@ Return only valid JSON with jsx and css properties.`
       const messages = [
         {
           role: "system",
-          content: `You are a React component generator. Generate ONLY valid React JSX components with CSS styling. 
+          content: `You are a React component generator with a conversational personality. Generate ONLY valid React JSX components with CSS styling. 
           Return a JSON object with 'jsx' and 'css' properties. The JSX should be a complete React component.
-          Make components modern, responsive, and well-styled.
+          Make components modern, responsive, and well-styled. Be helpful and conversational in your responses.
           
           ${context ? 'This is an iterative refinement. Modify the existing component based on the user request.' : ''}`
         }
@@ -103,7 +140,7 @@ Return only valid JSON with jsx and css properties.`
       } else {
         messages.push({
           role: "user",
-          content: `Create a React component for: ${prompt}. Return only valid JSON with jsx and css properties.`
+          content: `Create a React component for: "${prompt}". Return only valid JSON with jsx and css properties.`
         });
       }
 
@@ -112,16 +149,18 @@ Return only valid JSON with jsx and css properties.`
         {
           model: "gpt-4o-mini",
           messages: messages,
-        temperature: 0.7,
+          temperature: 0.7,
           max_tokens: 2000
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         },
-      }
-    );
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "HTTP-Referer": "https://your-app.com",
+            "X-Title": "Accio Component Generator"
+          },
+        }
+      );
 
       const content = response.data.choices[0].message.content;
       try {
@@ -134,10 +173,12 @@ Return only valid JSON with jsx and css properties.`
       }
     }
 
-    throw new Error("No AI API configured");
+    // Fallback to mock components
+    console.log("Using mock components as fallback");
+    return generateComponent(prompt, context);
   } catch (error) {
-    console.error("Real AI error:", error.message);
-    throw error;
+    console.error("Error in generateWithRealAI:", error);
+    return generateComponent(prompt, context);
   }
 };
 
@@ -731,12 +772,13 @@ export default Navbar;`,
   }
 };
 
-router.post("/generate", auth, async (req, res) => {
+router.post("/generate", auth, upload.single('image'), async (req, res) => {
   try {
     const { prompt, sessionId } = req.body;
+    const imageBuffer = req.file ? req.file.buffer : null;
 
-    if (!prompt || !sessionId) {
-      return res.status(400).json({ error: "Prompt and sessionId are required" });
+    if ((!prompt && !imageBuffer) || !sessionId) {
+      return res.status(400).json({ error: "Either prompt or image is required, and sessionId is required" });
     }
 
     // Get current session to check for existing component
@@ -750,9 +792,9 @@ router.post("/generate", auth, async (req, res) => {
     }
 
     // Check if this is an iterative refinement or new component request
-    const promptLower = prompt.toLowerCase();
+    const promptLower = (prompt || '').toLowerCase();
     const newComponentKeywords = ['create', 'make', 'build', 'generate', 'new'];
-    const componentTypes = ['car', 'vehicle', 'automobile', 'button', 'card', 'navbar', 'nav', 'header', 'menu'];
+    const componentTypes = ['car', 'vehicle', 'automobile', 'button', 'card', 'navbar', 'nav', 'header', 'menu', 'form'];
     
     const hasNewKeyword = newComponentKeywords.some(keyword => promptLower.includes(keyword));
     const hasComponentType = componentTypes.some(type => promptLower.includes(type));
@@ -760,6 +802,7 @@ router.post("/generate", auth, async (req, res) => {
     
     console.log('Request analysis:', {
       prompt: prompt,
+      hasImage: !!imageBuffer,
       hasNewKeyword,
       hasComponentType,
       isNewComponentRequest,
@@ -770,8 +813,8 @@ router.post("/generate", auth, async (req, res) => {
     let context = null;
     let isIterative = false;
     
-    if (isNewComponentRequest) {
-      // New component request - ignore existing context
+    if (isNewComponentRequest || imageBuffer) {
+      // New component request or image upload - ignore existing context
       console.log('Treating as new component request');
       context = null;
       isIterative = false;
@@ -788,19 +831,24 @@ router.post("/generate", auth, async (req, res) => {
     }
 
     // Generate component code (with context for iterative refinement)
-    const generatedCode = await generateComponent(prompt, context);
+    const generatedCode = await generateWithRealAI(prompt, context, imageBuffer);
 
     // Add user message to session
     session.messages.push({
       role: 'user',
-      content: prompt,
+      content: prompt || (imageBuffer ? 'Image upload' : 'Component request'),
       timestamp: new Date()
     });
 
-    // Add AI response
-    const responseMessage = isIterative 
-      ? `I've updated the component based on your request: "${prompt}". The component has been modified with the new styling and properties.`
-      : `I've generated a React component based on your request: "${prompt}". The component includes both JSX and CSS styling.`;
+    // Add AI response with better ChatGPT-like responses
+    let responseMessage;
+    if (imageBuffer) {
+      responseMessage = `I've analyzed the image you uploaded and created a React component based on it. The component includes modern styling and follows best practices for React development. You can now see the live preview and modify the component properties as needed.`;
+    } else if (isIterative) {
+      responseMessage = `Perfect! I've updated the component based on your request: "${prompt}". The changes have been applied and you can see the updated preview. Feel free to make more adjustments or ask for additional modifications.`;
+    } else {
+      responseMessage = `Great! I've created a React component based on your request: "${prompt}". The component is now ready with both JSX and CSS styling. You can see the live preview and customize the properties using the controls below. Let me know if you'd like any adjustments!`;
+    }
 
     session.messages.push({
       role: 'assistant',
@@ -818,10 +866,12 @@ router.post("/generate", auth, async (req, res) => {
 
     console.log('Component generated successfully:', {
       isIterative,
+      hasImage: !!imageBuffer,
       componentType: generatedCode.jsx.includes('Car') ? 'Car' : 
                     generatedCode.jsx.includes('Button') ? 'Button' : 
                     generatedCode.jsx.includes('Card') ? 'Card' : 
-                    generatedCode.jsx.includes('Navbar') ? 'Navbar' : 'Unknown'
+                    generatedCode.jsx.includes('Navbar') ? 'Navbar' : 
+                    generatedCode.jsx.includes('Form') ? 'Form' : 'Unknown'
     });
 
     res.json({ 

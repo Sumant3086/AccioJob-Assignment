@@ -4,7 +4,10 @@ import axios from 'axios';
 export default function Chat({ currentSession, onSessionUpdate }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -14,19 +17,43 @@ export default function Chat({ currentSession, onSessionUpdate }) {
     scrollToBottom();
   }, [currentSession?.messages]);
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!message.trim() || !currentSession || loading) return;
+    if ((!message.trim() && !selectedImage) || !currentSession || loading) return;
 
     console.log('Sending message:', {
       message: message.trim(),
+      hasImage: !!selectedImage,
       sessionId: currentSession._id,
       sessionMessages: currentSession.messages.length
     });
 
     setLoading(true);
     const currentMessage = message.trim();
+    const currentImage = selectedImage;
     setMessage(''); // Clear input immediately
+    setSelectedImage(null);
+    setImagePreview(null);
 
     try {
       const token = localStorage.getItem('token');
@@ -34,11 +61,27 @@ export default function Chat({ currentSession, onSessionUpdate }) {
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.post('/api/ai/generate', {
-        prompt: currentMessage,
-        sessionId: currentSession._id
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Create FormData if image is included
+      let requestData;
+      let headers = { Authorization: `Bearer ${token}` };
+
+      if (currentImage) {
+        const formData = new FormData();
+        formData.append('prompt', currentMessage || 'Generate a component based on this image');
+        formData.append('sessionId', currentSession._id);
+        formData.append('image', currentImage);
+        requestData = formData;
+        // Don't set Content-Type for FormData, let browser set it
+      } else {
+        requestData = {
+          prompt: currentMessage,
+          sessionId: currentSession._id
+        };
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const response = await axios.post('/api/ai/generate', requestData, {
+        headers: headers
       });
 
       // Update the session with the response
@@ -60,12 +103,13 @@ export default function Chat({ currentSession, onSessionUpdate }) {
           ...currentSession.messages,
           {
             role: 'user',
-            content: currentMessage,
-            timestamp: new Date()
+            content: currentMessage || 'Image upload',
+            timestamp: new Date(),
+            image: currentImage ? imagePreview : null
           },
           {
             role: 'assistant',
-            content: `Error: ${errorMessage}`,
+            content: `I apologize, but I encountered an error while processing your request: ${errorMessage}. Please try again or rephrase your request.`,
             timestamp: new Date()
           }
         ]
@@ -110,6 +154,9 @@ export default function Chat({ currentSession, onSessionUpdate }) {
               "Make a card component with image and title"
               <br />
               "Build a responsive navigation bar"
+              <br />
+              <br />
+              <strong>Or upload an image to generate a component based on it!</strong>
             </p>
           </div>
         ) : (
@@ -131,6 +178,15 @@ export default function Chat({ currentSession, onSessionUpdate }) {
                   {msg.role === 'user' ? 'U' : 'AI'}
                 </div>
                 <div className="flex-1">
+                  {msg.image && (
+                    <div className="mb-2">
+                      <img 
+                        src={msg.image} 
+                        alt="Uploaded reference" 
+                        className="max-w-xs rounded border"
+                      />
+                    </div>
+                  )}
                   <p className="text-sm text-gray-900">{msg.content}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {new Date(msg.timestamp).toLocaleTimeString()}
@@ -158,18 +214,53 @@ export default function Chat({ currentSession, onSessionUpdate }) {
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200">
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="mb-3 p-2 bg-gray-50 rounded-lg relative">
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="max-h-20 rounded border"
+            />
+            <button
+              onClick={removeImage}
+              className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         <form onSubmit={sendMessage} className="flex space-x-2">
+          {/* Image Upload Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
+          >
+            📷
+          </button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Describe the component you want to create..."
+            placeholder="Describe the component you want to create or upload an image..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           />
           <button
             type="submit"
-            disabled={loading || !message.trim()}
+            disabled={loading || (!message.trim() && !selectedImage)}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             Send
