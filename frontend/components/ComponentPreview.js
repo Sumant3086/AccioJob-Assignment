@@ -118,7 +118,7 @@ export default function ComponentPreview({ jsx, css }) {
         const isCar = jsx.includes('Car') || (jsx.includes('car') && !jsx.includes('navbar'));
         const isCard = jsx.includes('Card') || (jsx.includes('card') && !jsx.includes('navbar'));
         const isButton = jsx.includes('Button') || (jsx.includes('button') && !jsx.includes('navbar') && !jsx.includes('nav'));
-        const isForm = jsx.includes('Form') || jsx.includes('LoginForm') || jsx.includes('form') || jsx.includes('login-form');
+        const isForm = jsx.includes('LoginForm') || jsx.includes('Form') || (jsx.includes('form') && !jsx.includes('button')) || jsx.includes('login-form');
 
         console.log('Component type detection:', {
           componentName,
@@ -254,7 +254,7 @@ export default function ComponentPreview({ jsx, css }) {
             id="email"
             name="email"
             value="${state.email || ''}"
-            placeholder="Enter your email"
+            placeholder="${state.emailPlaceholder || 'Enter your email'}"
             required
           />
         </div>
@@ -265,7 +265,7 @@ export default function ComponentPreview({ jsx, css }) {
             id="password"
             name="password"
             value="${state.password || ''}"
-            placeholder="Enter your password"
+            placeholder="${state.passwordPlaceholder || 'Enter your password'}"
             required
           />
         </div>

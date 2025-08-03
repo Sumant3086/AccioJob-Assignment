@@ -18,6 +18,12 @@ export default function Chat({ currentSession, onSessionUpdate }) {
     e.preventDefault();
     if (!message.trim() || !currentSession || loading) return;
 
+    console.log('Sending message:', {
+      message: message.trim(),
+      sessionId: currentSession._id,
+      sessionMessages: currentSession.messages.length
+    });
+
     setLoading(true);
     const currentMessage = message.trim();
     setMessage(''); // Clear input immediately
@@ -37,7 +43,10 @@ export default function Chat({ currentSession, onSessionUpdate }) {
 
       // Update the session with the response
       if (response.data.session) {
+        console.log('Session updated successfully:', response.data.session);
         onSessionUpdate(response.data.session);
+      } else {
+        console.error('No session data in response:', response.data);
       }
       
     } catch (error) {
