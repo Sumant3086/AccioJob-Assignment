@@ -30,9 +30,19 @@ app.get('/health', (req, res) => {
 // Connect to MongoDB and Redis
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/acciojob_assignment';
 
+console.log('🔍 Attempting to connect to MongoDB...');
+console.log('📡 MongoDB URI:', MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')); // Hide credentials
+
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+    console.log('🌐 Database:', mongoose.connection.db.databaseName);
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    console.error('🔧 Please check your MONGODB_URI environment variable');
+    console.error('🔧 Make sure MongoDB Atlas is properly configured');
+  });
 
 connectRedis();
 
