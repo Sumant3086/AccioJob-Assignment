@@ -118,6 +118,7 @@ export default function ComponentPreview({ jsx, css }) {
         const isCar = jsx.includes('Car') || (jsx.includes('car') && !jsx.includes('navbar'));
         const isCard = jsx.includes('Card') || (jsx.includes('card') && !jsx.includes('navbar'));
         const isButton = jsx.includes('Button') || (jsx.includes('button') && !jsx.includes('navbar') && !jsx.includes('nav'));
+        const isForm = jsx.includes('Form') || jsx.includes('LoginForm') || jsx.includes('form') || jsx.includes('login-form');
 
         console.log('Component type detection:', {
           componentName,
@@ -125,6 +126,7 @@ export default function ComponentPreview({ jsx, css }) {
           isCar,
           isCard,
           isNavbar,
+          isForm,
           jsxSnippet: jsx.substring(0, 200)
         });
 
@@ -140,6 +142,9 @@ export default function ComponentPreview({ jsx, css }) {
         } else if (isButton) {
           console.log('Creating Button component');
           createInteractiveButton(wrapper, componentState, setComponentState);
+        } else if (isForm) {
+          console.log('Creating Form component');
+          createInteractiveForm(wrapper, componentState, setComponentState);
         } else {
           console.log('Creating Generic component');
           createGenericComponent(wrapper, componentName);
@@ -234,6 +239,56 @@ export default function ComponentPreview({ jsx, css }) {
     wrapper.appendChild(navbar);
   };
 
+  // Interactive Form Component
+  const createInteractiveForm = (wrapper, state, setState) => {
+    const form = document.createElement('div');
+    form.className = 'form-container';
+    
+    form.innerHTML = `
+      <form class="login-form">
+        <h2 class="form-title">${state.title || 'Login'}</h2>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="${state.email || ''}"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value="${state.password || ''}"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+        <button type="submit" class="submit-btn">
+          ${state.buttonText || 'Sign In'}
+        </button>
+      </form>
+    `;
+    
+    // Add form submission handler
+    const formElement = form.querySelector('form');
+    formElement.onsubmit = (e) => {
+      e.preventDefault();
+      alert(state.submitMessage || 'Form submitted! Check console for details.');
+      console.log('Form submitted with:', {
+        email: formElement.querySelector('#email').value,
+        password: formElement.querySelector('#password').value
+      });
+    };
+    
+    wrapper.appendChild(form);
+  };
+
   // Generic Component
   const createGenericComponent = (wrapper, componentName) => {
     const genericComponent = document.createElement('div');
@@ -259,6 +314,7 @@ export default function ComponentPreview({ jsx, css }) {
     const isCar = jsx.includes('Car') || (jsx.includes('car') && !jsx.includes('navbar'));
     const isCard = jsx.includes('Card') || (jsx.includes('card') && !jsx.includes('navbar'));
     const isButton = jsx.includes('Button') || (jsx.includes('button') && !jsx.includes('navbar') && !jsx.includes('nav'));
+    const isForm = jsx.includes('Form') || jsx.includes('LoginForm') || jsx.includes('form') || jsx.includes('login-form');
 
     controls.innerHTML = `
       <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
@@ -341,6 +397,29 @@ export default function ComponentPreview({ jsx, css }) {
           <label>Size:</label>
           <input type="text" value="${state.fontSize || '16px'}" placeholder="16px"
                  onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {fontSize: this.value}}))" />
+        </div>
+      `;
+    } else if (isForm) {
+      controls.innerHTML += `
+        <div class="control-group">
+          <label>Title:</label>
+          <input type="text" value="${state.title || 'Login'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {title: this.value}}))" />
+        </div>
+        <div class="control-group">
+          <label>Button Text:</label>
+          <input type="text" value="${state.buttonText || 'Sign In'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {buttonText: this.value}}))" />
+        </div>
+        <div class="control-group">
+          <label>Email Placeholder:</label>
+          <input type="text" value="${state.emailPlaceholder || 'Enter your email'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {emailPlaceholder: this.value}}))" />
+        </div>
+        <div class="control-group">
+          <label>Password Placeholder:</label>
+          <input type="text" value="${state.passwordPlaceholder || 'Enter your password'}" 
+                 onchange="this.parentElement.parentElement.dispatchEvent(new CustomEvent('updateState', {detail: {passwordPlaceholder: this.value}}))" />
         </div>
       `;
     }
