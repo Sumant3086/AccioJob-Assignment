@@ -81,7 +81,8 @@ export default function Chat({ currentSession, onSessionUpdate }) {
       }
 
       const response = await axios.post('/api/ai/generate', requestData, {
-        headers: headers
+        headers: headers,
+        timeout: 60000 // 60 second timeout
       });
 
       // Update the session with the response
@@ -94,7 +95,17 @@ export default function Chat({ currentSession, onSessionUpdate }) {
       
     } catch (error) {
       console.error('Failed to send message:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to generate component. Please try again.';
+      let errorMessage;
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        errorMessage = 'The request took too long to process. This might be due to image processing or AI generation taking longer than expected. Please try again with a smaller image or a text-only request.';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = 'Failed to generate component. Please try again.';
+      }
       
       // Show error in chat instead of alert
       const errorSession = {
@@ -109,7 +120,7 @@ export default function Chat({ currentSession, onSessionUpdate }) {
           },
           {
             role: 'assistant',
-            content: `I apologize, but I encountered an error while processing your request: ${errorMessage}. Please try again or rephrase your request.`,
+            content: `I apologize, but I encountered an issue while processing your request: ${errorMessage}. Please try again with a different approach or contact support if the problem persists.`,
             timestamp: new Date()
           }
         ]

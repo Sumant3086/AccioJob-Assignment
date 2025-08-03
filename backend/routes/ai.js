@@ -830,8 +830,28 @@ router.post("/generate", auth, upload.single('image'), async (req, res) => {
       isIterative = false;
     }
 
-    // Generate component code (with context for iterative refinement)
-    const generatedCode = await generateWithRealAI(prompt, context, imageBuffer);
+    // Generate component code with timeout and fallback
+    let generatedCode;
+    try {
+      // Set a timeout for AI generation
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('AI generation timeout')), 30000) // 30 seconds
+      );
+      
+      const generationPromise = generateWithRealAI(prompt, context, imageBuffer);
+      generatedCode = await Promise.race([generationPromise, timeoutPromise]);
+      
+    } catch (error) {
+      console.error('AI generation failed, using fallback:', error.message);
+      // Use fallback component generation
+      if (imageBuffer) {
+        // For image uploads, generate a card component as fallback
+        console.log('Using card component as fallback for image upload');
+        generatedCode = components.card;
+      } else {
+        generatedCode = await generateComponent(prompt, context);
+      }
+    }
 
     // Add user message to session
     session.messages.push({
@@ -862,7 +882,14 @@ router.post("/generate", auth, upload.single('image'), async (req, res) => {
       css: generatedCode.css
     };
 
-    await session.save();
+    // Save session with error handling
+    try {
+      await session.save();
+      console.log('Session saved successfully');
+    } catch (saveError) {
+      console.error('Failed to save session:', saveError);
+      return res.status(500).json({ error: "Failed to save session" });
+    }
 
     console.log('Component generated successfully:', {
       isIterative,
