@@ -7,6 +7,5 @@
   ],
   "env": {
     "NEXT_PUBLIC_API_URL": "https://acciojob-assignment-30a6.onrender.com"
-  },
-  "comment": "Updated for deployment fix"
+  }
 } 
