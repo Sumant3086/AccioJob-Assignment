@@ -123,10 +123,10 @@ Return only valid JSON with jsx and css properties.`
       }
 
       const requestBody = {
-        model: "gpt-4o-mini",
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 2000
+          model: "gpt-4o-mini",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 2000
       };
 
       // Add image if provided
@@ -197,18 +197,18 @@ Return only valid JSON with jsx and css properties.`
         {
           model: "gpt-4o-mini",
           messages: messages,
-          temperature: 0.7,
+        temperature: 0.7,
           max_tokens: 2000
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
             "HTTP-Referer": "https://your-app.com",
             "X-Title": "Accio Component Generator"
-          },
-        }
-      );
+        },
+      }
+    );
 
       const content = response.data.choices[0].message.content;
       try {
@@ -339,15 +339,15 @@ router.post("/generate", auth, upload.single('image'), async (req, res) => {
 
     // Update the current code (only for component responses)
     if (!isDescriptiveResponse) {
-      session.currentCode = {
-        jsx: generatedCode.jsx,
-        css: generatedCode.css
-      };
+    session.currentCode = {
+      jsx: generatedCode.jsx,
+      css: generatedCode.css
+    };
     }
 
     // Save session with error handling
     try {
-      await session.save();
+    await session.save();
       console.log('Session saved successfully');
     } catch (saveError) {
       console.error('Failed to save session:', saveError);
