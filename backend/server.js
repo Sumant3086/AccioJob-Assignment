@@ -43,7 +43,7 @@ app.get('/health', (req, res) => {
 });
 
 // Catch-all route for undefined endpoints
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
     message: 'The requested endpoint does not exist',
