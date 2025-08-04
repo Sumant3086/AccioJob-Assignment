@@ -82,7 +82,7 @@ npm run dev
 
 ## 🌐 Live Demo
 
-**🚀 Live Application**: [https://accio-job-assignment-six.vercel.app/](https://accio-job-assignment-six.vercel.app/)
+**🚀 Live Application**: [https://acciojobassignments.vercel.app/](https://acciojobassignments.vercel.app/)
 
 **📡 Backend API**: [https://acciojob-assignment-30a6.onrender.com/](https://acciojob-assignment-30a6.onrender.com/)
 
