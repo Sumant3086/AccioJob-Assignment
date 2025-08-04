@@ -4,6 +4,7 @@ import axios from 'axios';
 
 // Configure axios defaults - Updated for production deployment
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+axios.defaults.timeout = 10000; // 10 second timeout
 
 export default function App({ Component, pageProps }) {
   const [user, setUser] = useState(null);
@@ -21,7 +22,8 @@ export default function App({ Component, pageProps }) {
       .then(response => {
         setUser(response.data.user);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.log('Token verification failed:', error.message);
         // Token is invalid, clear storage
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -36,8 +38,11 @@ export default function App({ Component, pageProps }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading-spinner"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="loading-spinner mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
