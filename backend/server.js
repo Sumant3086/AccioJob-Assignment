@@ -17,6 +17,21 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Accio Backend API is running!',
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      sessions: '/api/sessions',
+      ai: '/api/ai'
+    }
+  });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sessions', sessionRoutes);
@@ -25,6 +40,21 @@ app.use('/api/ai', aiRoutes);
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Catch-all route for undefined endpoints
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Route not found',
+    message: 'The requested endpoint does not exist',
+    availableEndpoints: {
+      root: '/',
+      health: '/health',
+      auth: '/api/auth',
+      sessions: '/api/sessions',
+      ai: '/api/ai'
+    }
+  });
 });
 
 // Connect to MongoDB and Redis
